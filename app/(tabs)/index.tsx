@@ -20,11 +20,17 @@ import FileViewer from "react-native-file-viewer";
 import { WebView } from "react-native-webview";
 import * as DocumentPicker from "expo-document-picker";
 import * as Permissions from "expo-permissions";
+import * as Sharing from "expo-sharing";
+import { captureRef } from "react-native-view-shot";
+
 import { Table, Row } from "react-native-table-component";
 import QRCode from "react-native-qrcode-svg";
 import Base from "base64-js";
 import { Buffer } from "buffer";
 import { CameraView, useCameraPermissions } from "expo-camera/next";
+import Excel from "exceljs";
+
+const wbb = new Excel.Workbook();
 
 // Convert data URI to binary data
 
@@ -36,7 +42,9 @@ import { NativeModules } from "react-native";
 // const DownloadDirectoryManager = NativeModules.DownloadDirectoryManager;
 import React, { useEffect, useState } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-
+import useQRCode from "@/helper/hooks/useQrCode";
+import QR from "@/helper/hooks/useQrCode";
+const base64ImageData = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAApgAAAKYB3X3/OAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVEiJtZZPbBtFFMZ/M7ubXdtdb1xSFyeilBapySVU8h8OoFaooFSqiihIVIpQBKci6KEg9Q6H9kovIHoCIVQJJCKE1ENFjnAgcaSGC6rEnxBwA04Tx43t2FnvDAfjkNibxgHxnWb2e/u992bee7tCa00YFsffekFY+nUzFtjW0LrvjRXrCDIAaPLlW0nHL0SsZtVoaF98mLrx3pdhOqLtYPHChahZcYYO7KvPFxvRl5XPp1sN3adWiD1ZAqD6XYK1b/dvE5IWryTt2udLFedwc1+9kLp+vbbpoDh+6TklxBeAi9TL0taeWpdmZzQDry0AcO+jQ12RyohqqoYoo8RDwJrU+qXkjWtfi8Xxt58BdQuwQs9qC/afLwCw8tnQbqYAPsgxE1S6F3EAIXux2oQFKm0ihMsOF71dHYx+f3NND68ghCu1YIoePPQN1pGRABkJ6Bus96CutRZMydTl+TvuiRW1m3n0eDl0vRPcEysqdXn+jsQPsrHMquGeXEaY4Yk4wxWcY5V/9scqOMOVUFthatyTy8QyqwZ+kDURKoMWxNKr2EeqVKcTNOajqKoBgOE28U4tdQl5p5bwCw7BWquaZSzAPlwjlithJtp3pTImSqQRrb2Z8PHGigD4RZuNX6JYj6wj7O4TFLbCO/Mn/m8R+h6rYSUb3ekokRY6f/YukArN979jcW+V/S8g0eT/N3VN3kTqWbQ428m9/8k0P/1aIhF36PccEl6EhOcAUCrXKZXXWS3XKd2vc/TRBG9O5ELC17MmWubD2nKhUKZa26Ba2+D3P+4/MNCFwg59oWVeYhkzgN/JDR8deKBoD7Y+ljEjGZ0sosXVTvbc6RHirr2reNy1OXd6pJsQ+gqjk8VWFYmHrwBzW/n+uMPFiRwHB2I7ih8ciHFxIkd/3Omk5tCDV1t+2nNu5sxxpDFNx+huNhVT3/zMDz8usXC3ddaHBj1GHj/As08fwTS7Kt1HBTmyN29vdwAw+/wbwLVOJ3uAD1wi/dUH7Qei66PfyuRj4Ik9is+hglfbkbfR3cnZm7chlUWLdwmprtCohX4HUtlOcQjLYCu+fzGJH2QRKvP3UNz8bWk1qMxjGTOMThZ3kvgLI5AzFfo379UAAAAASUVORK5CYII=`;
 interface ExcelItem {
   [key: string]: string;
 }
@@ -58,13 +66,67 @@ const alertConfirm = (onPressOk: () => void) =>
     { cancelable: true }
   );
 
+async function svgToBase64(svgData, width, height) {
+  // Render SVG to a base64 encoded PNG image
+  const uri = `data:image/svg+xml;base64,${Buffer.from(svgData).toString(
+    "base64"
+  )}`;
+  const ref = React.createRef();
+
+  // Render SVG using SvgUri
+  const svgComponent = <QRCode value="Hello, World!" size={100} ref={ref} />;
+
+  // Capture the rendered SVG as an image
+  const base64Data = await captureRef(ref, {
+    format: "png",
+    quality: 1,
+  });
+
+  return base64Data;
+}
+const qrCodeSvg = <QRCode value="Hello, World!" size={100} />;
+// Function to add image to Excel using exceljs
+async function addImageToExcel(base64Image: any) {
+  // Create a new workbook
+  const workbook = new Excel.Workbook();
+  const worksheet = workbook.addWorksheet("Sheet1");
+
+  // Add the base64 image to the worksheet
+  const imageId = workbook.addImage({
+    base64: base64Image,
+    extension: "png",
+  });
+
+  // Add the image to a specific cell
+  worksheet.addImage(imageId, {
+    tl: { col: 0, row: 0 },
+    ext: { width: 100, height: 100 },
+  });
+
+  // Save the workbook
+  const buffer = await workbook.xlsx.writeBuffer();
+  return buffer;
+}
 export default function TabOneScreen() {
   const [dataList, setDataList] = useState<ExcelItem[] | any[]>([]);
   const [dataList2, setDataList2] = useState<ExcelItem[] | any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchQuery2, setSearchQuery2] = useState("");
+  const ref = React.createRef();
 
   const [updatedIndex, setUpdatedIndex] = useState<number | null>(null);
+  // const { getRefQrcode } = useQRCode();
+  const qrCode = new QRCode({
+    size: 50,
+    value: "vv",
+  });
+
+  // const svgString = qrCode.toString();
+
+  // console.log(svgString);
+  // const qr = new QR({ value: "", size: 10 });
+  // const qrRef = qr.getQRCodeRef();
+  console.log({ qrCode });
 
   // const [pickedFile, setPickedFile] =
   //   useState<DocumentPicker.DocumentPickerResult | null>(null);
@@ -87,6 +149,7 @@ export default function TabOneScreen() {
   }) => {
     return (
       <View style={styles.item}>
+        {/* {qrCode} */}
         <Text style={[styles.table, { width: "10%" }]}>{index + 1}-</Text>
         <Text style={[styles.table, { width: "50%" }]}>
           {item.toString().substring(0, 20)}
@@ -104,6 +167,8 @@ export default function TabOneScreen() {
     item: ExcelItem;
     index: number;
   }) => {
+    console.log({ item });
+
     return (
       <View
         style={{
@@ -116,9 +181,8 @@ export default function TabOneScreen() {
           borderBottomWidth: 1,
         }}
       >
-        <Text>
-          {index}- {item.name.substring(0, 20)}
-        </Text>
+        <Text>{index}-</Text>
+        {item.qrcode}
         <QRCode value={item.toString()} size={25} />
       </View>
     );
@@ -139,24 +203,47 @@ export default function TabOneScreen() {
             fileUri = uri;
           });
         }
+        // const sheetName = wbb.SheetNames[0]; // Assuming only one sheet
 
-        FileSystem.readAsStringAsync(fileUri, { encoding: "base64" }).then(
-          (data) => {
-            const workbook = XLSX.read(data, { type: "base64" });
-            const sheetName = workbook.SheetNames[0]; // Assuming only one sheet
-            const worksheet = workbook.Sheets[sheetName];
-            const parsedData: ExcelItem[] = XLSX.utils.sheet_to_json(
-              worksheet,
-              {
-                header: 1,
-              }
-            );
+        //   wbb.xlsx.readFile(fileUri).then(() => {
 
-            setDataList([...dataList, ...parsedData]);
+        //     const wsb = wbb.getWorksheet('My Sheet');
+        //     const c1 = wsb?.getColumn(2);
 
-            // console.log({ data });
-          }
-        );
+        //     c1?.eachCell(c => {
+        //        console.log(c.value);
+        //     });
+
+        //     const c2 = wsb?.getColumn(2);
+        //     c2?.eachCell(c => {
+        //        console.log(c.value);
+        //     });
+
+        //  }).catch(err => {
+        //     console.log(err.message);
+        //  });
+
+        const data = await FileSystem.readAsStringAsync(fileUri, {
+          encoding: "base64",
+        }).then((data) => {
+          return data;
+          // await workbook.xlsx.load(data);
+
+          // const workbook = XLSX.read(data, { type: "base64" });
+          // const sheetName = workbook.SheetNames[0]; // Assuming only one sheet
+          // const worksheet = workbook.Sheets[sheetName];
+          // const parsedData: ExcelItem[] = XLSX.utils.sheet_to_json(
+          //   worksheet,
+          //   {
+          //     header: 1,
+          //   }
+          // );
+
+          // setDataList([...dataList, ...parsedData]);
+
+          // console.log({ data });
+        });
+        // await wbb.xlsx.load(data);
 
         // now it works
         // handle file
@@ -167,6 +254,27 @@ export default function TabOneScreen() {
     } catch (error) {
       console.error("File pick error:", error);
     }
+
+    svgToBase64(qrCodeSvg, 100, 100)
+      .then(async (base64ImageData) => {
+        // Add image to Excel and save the file
+        // const buffer = await addImageToExcel(base64ImageData);
+
+        // // Convert buffer to base64 string
+        // const base64String = buffer.toString();
+
+        // Save the Excel file locally
+        const fileUri = `${FileSystem.cacheDirectory}filename.xlsx`;
+        await FileSystem.writeAsStringAsync(fileUri, base64ImageData, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        // Share the Excel file
+        await Sharing.shareAsync(fileUri);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   };
 
   const handleActiveEdit = (index: number) => {
@@ -195,16 +303,110 @@ export default function TabOneScreen() {
     }
   };
 
-  const exportToXLSX = async () => {
-    const ws = XLSX.utils.json_to_sheet([
-      { name: "Bill Clinton", index: 42 },
-      { name: "GeorgeW Bush", index: 43 },
-      { name: "Barack Obama", index: 44 },
-      { name: "Donald Trump", index: 45 },
-      { name: "Joseph Biden", index: 46 },
-    ]);
+  const qrCodeSVG = <QRCode value={"helo"} size={20} />;
 
+  const getRefQrcodee = () => {
+    console.log({ getRefQrcodeee: getRefQrcode("test", 10) });
+  };
+
+  const exportToXLSX = async () => {
+    const data = [
+      {
+        name: "KKKill Clinton",
+        index: 42,
+        image: base64ImageData,
+      },
+      {
+        name: "GeorgeW Bush",
+        index: 43,
+        image: base64ImageData,
+      },
+      {
+        name: "Barack Obama",
+        index: 44,
+        image: base64ImageData,
+      },
+    ];
     const wb = XLSX.utils.book_new();
+
+    // const ws = XLSX.utils.json_to_sheet(data);
+
+    const dataArray = data.map((obj) => [obj.name, obj.index]);
+
+    const ws = XLSX.utils.aoa_to_sheet([
+      // Headers
+      ["Name", "Index"],
+      // Data
+      ...dataArray,
+    ]);
+    // Modify the worksheet's XML to include the image
+    const imageData = `<x:Picture xmlns:x="http://schemas.openxmlformats.org/drawingml/2006/main">
+<x:BlipFill>
+    <x:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId1"/>
+    <x:stretch>
+        <x:fillRect/>
+    </x:stretch>
+</x:BlipFill>
+<x:ClientData/>
+</x:Picture>`;
+
+    // Create a new relationship ID
+    const rId = "rId1";
+
+    // Generate the XML for the image relationship
+    const relsData = `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="data:image/png;base64,${base64ImageData}"/>
+</Relationships>`;
+
+    // Add the XML data to the worksheet
+    ws["!drawing"] = [{ xml: imageData }];
+    ws["!rels"] = [{ xml: relsData }];
+
+    // // Create a drawing object for the image
+    // const drawing = {
+    //   type: "image",
+    //   position: {
+    //     // Set the position of the image
+    //     col: 0, // Column index
+    //     row: 0, // Row index
+    //   },
+    //   // Set the size of the image
+    //   size: {
+    //     width: 100, // Image width
+    //     height: 100, // Image height
+    //   },
+    //   // Set the base64 image data
+    //   imageData: base64ImageData,
+    // };
+
+    // // Add the drawing object to the worksheet
+    // ws2["!drawings"] = [drawing];
+
+    // Add QR codes as images to the Excel sheet
+    //  for (let i = 0; i < data.length; i++) {
+    //   const qrCodeValue = data[i].name;
+    //   const qrCodeSVG = (
+    //     <QRCode
+    //       value={qrCodeValue}
+    //       size={100}
+    //     />
+    //   );
+
+    //   // Convert SVG to PNG and save it locally
+    //   const pngUri = await generatePngFromSvg(qrCodeSVG);
+
+    //   // Add image to worksheet
+    //   const imageData = await FileSystem.readAsStringAsync(pngUri, {
+    //     encoding: FileSystem.EncodingType.Base64,
+    //   });
+
+    //   XLSX.utils.sheet_addImage(ws, {
+    //     imageData,
+    //     type: 'png',
+    //     position: { row: i + 1, col: 2 },
+    //   });
+    // }
+
     XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
     const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
     const fileName = "example.xlsx"; // نام فایل
@@ -213,7 +415,7 @@ export default function TabOneScreen() {
     const savedFilePath = destPath + fileName;
 
     /* create workbook and append worksheet */
-    XLSX.utils.book_append_sheet(wb, ws, "Data");
+    // XLSX.utils.book_append_sheet(wb, ws, "Data");
     /* export to XLSX */
     // await XLSX.writeFileXLSX(wb, fileName);
 
@@ -256,7 +458,10 @@ export default function TabOneScreen() {
       await FileSystem.writeAsStringAsync(path, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       })
-        .then((response) => console.log("save correct"))
+        .then((response) => {
+          console.log("save correct :" + fileName);
+          Sharing.shareAsync(path);
+        })
         .catch((error) => console.log({ error }));
 
       try {
@@ -423,7 +628,7 @@ export default function TabOneScreen() {
 
           <Button
             title="تایید نهایی و ساخت بار کد"
-            onPress={() => alertConfirm(exportToXLSX)}
+            onPress={() => alertConfirm(getRefQrcodee)}
           />
         </View>
       ) : (
