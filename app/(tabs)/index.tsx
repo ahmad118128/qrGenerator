@@ -3,135 +3,40 @@ import {
   FlatList,
   Platform,
   StyleSheet,
-  PermissionsAndroid,
   Button,
-  TouchableOpacity,
   TextInput,
+  TouchableOpacity,
 } from "react-native";
 import XLSX from "xlsx";
-import { DocumentDirectoryPath, DownloadDirectoryPath } from "react-native-fs";
-import EditScreenInfo from "@/components/EditScreenInfo";
 import { Text, View } from "@/components/Themed";
-import RNFetchBlob from "rn-fetch-blob";
 import * as FileSystem from "expo-file-system";
-import DeviceInfo from "react-native-device-info";
-import ReactNativeBlobUtil from "react-native-blob-util";
-import FileViewer from "react-native-file-viewer";
-import { WebView } from "react-native-webview";
 import * as DocumentPicker from "expo-document-picker";
-import * as Permissions from "expo-permissions";
 import * as Sharing from "expo-sharing";
-import { captureRef } from "react-native-view-shot";
-
-import { Table, Row } from "react-native-table-component";
+import * as Print from "expo-print";
 import QRCode from "react-native-qrcode-svg";
-import Base from "base64-js";
-import { Buffer } from "buffer";
-import { CameraView, useCameraPermissions } from "expo-camera/next";
-import Excel from "exceljs";
-
-const wbb = new Excel.Workbook();
-
-// Convert data URI to binary data
-
-import _ from "lodash";
-
-import { NativeModules } from "react-native";
-
-// const sampleDocFilePath = SavePath + "/sample.doc";
-// const DownloadDirectoryManager = NativeModules.DownloadDirectoryManager;
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import useQRCode from "@/helper/hooks/useQrCode";
-import QR from "@/helper/hooks/useQrCode";
-const base64ImageData = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAApgAAAKYB3X3/OAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAANCSURBVEiJtZZPbBtFFMZ/M7ubXdtdb1xSFyeilBapySVU8h8OoFaooFSqiihIVIpQBKci6KEg9Q6H9kovIHoCIVQJJCKE1ENFjnAgcaSGC6rEnxBwA04Tx43t2FnvDAfjkNibxgHxnWb2e/u992bee7tCa00YFsffekFY+nUzFtjW0LrvjRXrCDIAaPLlW0nHL0SsZtVoaF98mLrx3pdhOqLtYPHChahZcYYO7KvPFxvRl5XPp1sN3adWiD1ZAqD6XYK1b/dvE5IWryTt2udLFedwc1+9kLp+vbbpoDh+6TklxBeAi9TL0taeWpdmZzQDry0AcO+jQ12RyohqqoYoo8RDwJrU+qXkjWtfi8Xxt58BdQuwQs9qC/afLwCw8tnQbqYAPsgxE1S6F3EAIXux2oQFKm0ihMsOF71dHYx+f3NND68ghCu1YIoePPQN1pGRABkJ6Bus96CutRZMydTl+TvuiRW1m3n0eDl0vRPcEysqdXn+jsQPsrHMquGeXEaY4Yk4wxWcY5V/9scqOMOVUFthatyTy8QyqwZ+kDURKoMWxNKr2EeqVKcTNOajqKoBgOE28U4tdQl5p5bwCw7BWquaZSzAPlwjlithJtp3pTImSqQRrb2Z8PHGigD4RZuNX6JYj6wj7O4TFLbCO/Mn/m8R+h6rYSUb3ekokRY6f/YukArN979jcW+V/S8g0eT/N3VN3kTqWbQ428m9/8k0P/1aIhF36PccEl6EhOcAUCrXKZXXWS3XKd2vc/TRBG9O5ELC17MmWubD2nKhUKZa26Ba2+D3P+4/MNCFwg59oWVeYhkzgN/JDR8deKBoD7Y+ljEjGZ0sosXVTvbc6RHirr2reNy1OXd6pJsQ+gqjk8VWFYmHrwBzW/n+uMPFiRwHB2I7ih8ciHFxIkd/3Omk5tCDV1t+2nNu5sxxpDFNx+huNhVT3/zMDz8usXC3ddaHBj1GHj/As08fwTS7Kt1HBTmyN29vdwAw+/wbwLVOJ3uAD1wi/dUH7Qei66PfyuRj4Ik9is+hglfbkbfR3cnZm7chlUWLdwmprtCohX4HUtlOcQjLYCu+fzGJH2QRKvP3UNz8bWk1qMxjGTOMThZ3kvgLI5AzFfo379UAAAAASUVORK5CYII=`;
-interface ExcelItem {
-  [key: string]: string;
-}
+import { ExcelItem, IFinalDataList, IFinalDataListBase64 } from "../types";
+import { FINAL_LIST_NAME } from "../constants";
+import { alertConfirm, generateUniqueId } from "../utils";
+import { CustomButton } from "@/components/CustomButton";
+import { CustomTextInput } from "@/components/CustomTextInput";
+import { CustomSwitch } from "@/components/CustomSwitch";
+import { CustomText } from "@/components/CustomText";
 
-const alertConfirm = (onPressOk: () => void) =>
-  Alert.alert(
-    "تایید",
-    "آیا از این کار اطمینان دارید؟",
-    [
-      {
-        text: "بله",
-        onPress: onPressOk,
-      },
-      {
-        text: "خیر",
-        style: "cancel",
-      },
-    ],
-    { cancelable: true }
-  );
-
-async function svgToBase64(svgData, width, height) {
-  // Render SVG to a base64 encoded PNG image
-  const uri = `data:image/svg+xml;base64,${Buffer.from(svgData).toString(
-    "base64"
-  )}`;
-  const ref = React.createRef();
-
-  // Render SVG using SvgUri
-  const svgComponent = <QRCode value="Hello, World!" size={100} ref={ref} />;
-
-  // Capture the rendered SVG as an image
-  const base64Data = await captureRef(ref, {
-    format: "png",
-    quality: 1,
-  });
-
-  return base64Data;
-}
-const qrCodeSvg = <QRCode value="Hello, World!" size={100} />;
-// Function to add image to Excel using exceljs
-async function addImageToExcel(base64Image: any) {
-  // Create a new workbook
-  const workbook = new Excel.Workbook();
-  const worksheet = workbook.addWorksheet("Sheet1");
-
-  // Add the base64 image to the worksheet
-  const imageId = workbook.addImage({
-    base64: base64Image,
-    extension: "png",
-  });
-
-  // Add the image to a specific cell
-  worksheet.addImage(imageId, {
-    tl: { col: 0, row: 0 },
-    ext: { width: 100, height: 100 },
-  });
-
-  // Save the workbook
-  const buffer = await workbook.xlsx.writeBuffer();
-  return buffer;
-}
 export default function TabOneScreen() {
   const [dataList, setDataList] = useState<ExcelItem[] | any[]>([]);
   const [dataList2, setDataList2] = useState<ExcelItem[] | any[]>([]);
+  const [displayExportPrint, setDisplayExportPrint] = useState(false);
+  const finalDataListBase64: IFinalDataListBase64[] = [];
   const [searchQuery, setSearchQuery] = useState("");
   const [searchQuery2, setSearchQuery2] = useState("");
-  const ref = React.createRef();
-
   const [updatedIndex, setUpdatedIndex] = useState<number | null>(null);
-  // const { getRefQrcode } = useQRCode();
-  const qrCode = new QRCode({
-    size: 50,
-    value: "vv",
-  });
+  const [isBrowseFile, setIsBrowseFile] = useState(false);
 
-  // const svgString = qrCode.toString();
-
-  // console.log(svgString);
-  // const qr = new QR({ value: "", size: 10 });
-  // const qrRef = qr.getQRCodeRef();
-  console.log({ qrCode });
-
-  // const [pickedFile, setPickedFile] =
-  //   useState<DocumentPicker.DocumentPickerResult | null>(null);
-
+  const toggleSwitch = () => setIsBrowseFile((previousState) => !previousState);
   const [textInputValue, setTextInputValue] = useState<string>("");
+
   const filteredData = dataList.filter((item) =>
     item.toString().toLowerCase().includes(searchQuery2.toLowerCase())
   );
@@ -140,6 +45,7 @@ export default function TabOneScreen() {
       ? item.name.toLowerCase().includes(searchQuery.toLowerCase())
       : dataList2
   );
+
   const renderCrudItem = ({
     item,
     index,
@@ -148,27 +54,46 @@ export default function TabOneScreen() {
     index: number;
   }) => {
     return (
-      <View style={styles.item}>
-        {/* {qrCode} */}
-        <Text style={[styles.table, { width: "10%" }]}>{index + 1}-</Text>
-        <Text style={[styles.table, { width: "50%" }]}>
-          {item.toString().substring(0, 20)}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-around",
+          alignItems: "center",
+          borderBottomColor: "gray",
+          borderBottomWidth: 1,
+          paddingVertical: 5,
+        }}
+      >
+        <Text style={{ width: "50%" }}>
+          {index + 1}- {item.toString().substring(0, 20)}
         </Text>
-        {/* <QRCode value={item.toString()} size={50} /> */}
-        <Button title="Edit" onPress={() => handleActiveEdit(index)} />
-        <Button title="Delete" onPress={() => handleDelete(index, item)} />
+        <TouchableOpacity onPress={() => handleActiveEdit(index)}>
+          <FontAwesome
+            name="edit"
+            size={25}
+            color="gray"
+            style={{ marginHorizontal: 2 }}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDelete(index, item)}>
+          <FontAwesome
+            name="close"
+            size={25}
+            color="gray"
+            style={{ marginHorizontal: 2 }}
+          />
+        </TouchableOpacity>
       </View>
     );
   };
+
   const renderQrItem = ({
     item,
     index,
   }: {
-    item: ExcelItem;
+    item: IFinalDataList;
     index: number;
   }) => {
-    console.log({ item });
-
     return (
       <View
         style={{
@@ -181,9 +106,34 @@ export default function TabOneScreen() {
           borderBottomWidth: 1,
         }}
       >
-        <Text>{index}-</Text>
-        {item.qrcode}
-        <QRCode value={item.toString()} size={25} />
+        <Text>
+          {index + 1}-{item.name.substring(0, 20)}
+        </Text>
+        <Text>{item.data}</Text>
+        <Text>{item.status}</Text>
+        <QRCode
+          value={item.id}
+          size={25}
+          getRef={async (c) => {
+            if (!c?.toDataURL) return;
+            await c.toDataURL((data: string) => {
+              if (!finalDataListBase64.find((i) => i.name === item.name)) {
+                finalDataListBase64.push({
+                  ...item,
+                  qrcodeBase64: `data:image/jpeg;base64,${data}`,
+                });
+              }
+
+              // console.log("data -------------------", data);
+
+              // const shareImageBase64 = {
+              //   title: "QR",
+              //   message: "Here is my QR code!",
+              //   url: `data:image/jpeg;base64,${data}`,
+              // }
+            });
+          }}
+        />
       </View>
     );
   };
@@ -225,21 +175,17 @@ export default function TabOneScreen() {
 
         const data = await FileSystem.readAsStringAsync(fileUri, {
           encoding: "base64",
-        }).then((data) => {
-          return data;
+        }).then(async (data) => {
           // await workbook.xlsx.load(data);
 
-          // const workbook = XLSX.read(data, { type: "base64" });
-          // const sheetName = workbook.SheetNames[0]; // Assuming only one sheet
-          // const worksheet = workbook.Sheets[sheetName];
-          // const parsedData: ExcelItem[] = XLSX.utils.sheet_to_json(
-          //   worksheet,
-          //   {
-          //     header: 1,
-          //   }
-          // );
+          const workbook = XLSX.read(data, { type: "base64" });
+          const sheetName = workbook.SheetNames[0]; // Assuming only one sheet
+          const worksheet = workbook.Sheets[sheetName];
+          const parsedData: ExcelItem[] = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1,
+          });
 
-          // setDataList([...dataList, ...parsedData]);
+          setDataList([...dataList, ...parsedData]);
 
           // console.log({ data });
         });
@@ -255,26 +201,26 @@ export default function TabOneScreen() {
       console.error("File pick error:", error);
     }
 
-    svgToBase64(qrCodeSvg, 100, 100)
-      .then(async (base64ImageData) => {
-        // Add image to Excel and save the file
-        // const buffer = await addImageToExcel(base64ImageData);
+    // svgToBase64(qrCodeSvg, 100, 100)
+    //   .then(async (base64ImageData) => {
+    //     // Add image to Excel and save the file
+    //     // const buffer = await addImageToExcel(base64ImageData);
 
-        // // Convert buffer to base64 string
-        // const base64String = buffer.toString();
+    //     // // Convert buffer to base64 string
+    //     // const base64String = buffer.toString();
 
-        // Save the Excel file locally
-        const fileUri = `${FileSystem.cacheDirectory}filename.xlsx`;
-        await FileSystem.writeAsStringAsync(fileUri, base64ImageData, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
+    //     // Save the Excel file locally
+    //     const fileUri = `${FileSystem.cacheDirectory}filename.xlsx`;
+    //     await FileSystem.writeAsStringAsync(fileUri, base64ImageData, {
+    //       encoding: FileSystem.EncodingType.Base64,
+    //     });
 
-        // Share the Excel file
-        await Sharing.shareAsync(fileUri);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+    //     // Share the Excel file
+    //     await Sharing.shareAsync(fileUri);
+    //   })
+    //   .catch((error) => {
+    //     console.error("Error:", error);
+    //   });
   };
 
   const handleActiveEdit = (index: number) => {
@@ -303,116 +249,32 @@ export default function TabOneScreen() {
     }
   };
 
-  const qrCodeSVG = <QRCode value={"helo"} size={20} />;
-
-  const getRefQrcodee = () => {
-    console.log({ getRefQrcodeee: getRefQrcode("test", 10) });
-  };
-
-  const exportToXLSX = async () => {
-    const data = [
-      {
-        name: "KKKill Clinton",
-        index: 42,
-        image: base64ImageData,
-      },
-      {
-        name: "GeorgeW Bush",
-        index: 43,
-        image: base64ImageData,
-      },
-      {
-        name: "Barack Obama",
-        index: 44,
-        image: base64ImageData,
-      },
-    ];
+  const saveFinalList = async () => {
+    // convert string list to object list
+    const objecDataList = dataList.map((item) => {
+      return {
+        id: generateUniqueId(),
+        name: item.toString(),
+        date: "",
+        status: "",
+      };
+    });
     const wb = XLSX.utils.book_new();
-
-    // const ws = XLSX.utils.json_to_sheet(data);
-
-    const dataArray = data.map((obj) => [obj.name, obj.index]);
-
-    const ws = XLSX.utils.aoa_to_sheet([
-      // Headers
-      ["Name", "Index"],
-      // Data
-      ...dataArray,
-    ]);
-    // Modify the worksheet's XML to include the image
-    const imageData = `<x:Picture xmlns:x="http://schemas.openxmlformats.org/drawingml/2006/main">
-<x:BlipFill>
-    <x:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId1"/>
-    <x:stretch>
-        <x:fillRect/>
-    </x:stretch>
-</x:BlipFill>
-<x:ClientData/>
-</x:Picture>`;
-
-    // Create a new relationship ID
-    const rId = "rId1";
-
-    // Generate the XML for the image relationship
-    const relsData = `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="data:image/png;base64,${base64ImageData}"/>
-</Relationships>`;
-
-    // Add the XML data to the worksheet
-    ws["!drawing"] = [{ xml: imageData }];
-    ws["!rels"] = [{ xml: relsData }];
-
-    // // Create a drawing object for the image
-    // const drawing = {
-    //   type: "image",
-    //   position: {
-    //     // Set the position of the image
-    //     col: 0, // Column index
-    //     row: 0, // Row index
-    //   },
-    //   // Set the size of the image
-    //   size: {
-    //     width: 100, // Image width
-    //     height: 100, // Image height
-    //   },
-    //   // Set the base64 image data
-    //   imageData: base64ImageData,
-    // };
-
-    // // Add the drawing object to the worksheet
-    // ws2["!drawings"] = [drawing];
-
-    // Add QR codes as images to the Excel sheet
-    //  for (let i = 0; i < data.length; i++) {
-    //   const qrCodeValue = data[i].name;
-    //   const qrCodeSVG = (
-    //     <QRCode
-    //       value={qrCodeValue}
-    //       size={100}
-    //     />
-    //   );
-
-    //   // Convert SVG to PNG and save it locally
-    //   const pngUri = await generatePngFromSvg(qrCodeSVG);
-
-    //   // Add image to worksheet
-    //   const imageData = await FileSystem.readAsStringAsync(pngUri, {
-    //     encoding: FileSystem.EncodingType.Base64,
-    //   });
-
-    //   XLSX.utils.sheet_addImage(ws, {
-    //     imageData,
-    //     type: 'png',
-    //     position: { row: i + 1, col: 2 },
-    //   });
-    // }
+    const ws = XLSX.utils.json_to_sheet(objecDataList);
 
     XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
     const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
-    const fileName = "example.xlsx"; // نام فایل
     const uri = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${wbout}`;
-    const destPath = FileSystem?.documentDirectory as string;
-    const savedFilePath = destPath + fileName;
+    const path = `${FileSystem?.documentDirectory}${FINAL_LIST_NAME}`;
+
+    await FileSystem.writeAsStringAsync(path, wbout, {
+      encoding: FileSystem.EncodingType.Base64,
+    })
+      .then((response) => {
+        Sharing.shareAsync(path);
+        setDataList2(objecDataList);
+      })
+      .catch((error) => console.log({ error }));
 
     /* create workbook and append worksheet */
     // XLSX.utils.book_append_sheet(wb, ws, "Data");
@@ -430,78 +292,78 @@ export default function TabOneScreen() {
     //   console.log({ e });
     // }
 
-    try {
-      // خواندن داده‌های فایل از URI
-      const base64Data = uri.split(",")[1];
-      const bufferData = Buffer.from(base64Data, "binary").toString("base64");
+    // try {
+    //   // خواندن داده‌های فایل از URI
+    // const base64Data = uri.split(",")[1];
+    //   const bufferData = Buffer.from(base64Data, "binary").toString("base64");
 
-      // ذخیره داده‌های فایل در حافظه گوشی
-      const path = `${FileSystem.documentDirectory}${fileName}`;
+    //   // ذخیره داده‌های فایل در حافظه گوشی
+    //   const path = `${FileSystem.documentDirectory}${fileName}`;
 
-      // Save the file to the Download directory
-      // const downloadDir = FileSystem.documentDirectory + "Download/";
-      // const path = `${downloadDir}${fileName}`;
+    //   // Save the file to the Download directory
+    //   // const downloadDir = FileSystem.documentDirectory + "Download/";
+    //   // const path = `${downloadDir}${fileName}`;
 
-      // Save the file to the cache directory
-      // const cacheDir = FileSystem.cacheDirectory;
-      // const path = `${cacheDir}${fileName}`;
+    //   // Save the file to the cache directory
+    //   // const cacheDir = FileSystem.cacheDirectory;
+    // const path = `${cacheDir}${fileName}`;
 
-      // const to = FileSystem.documentDirectory + fileName;
+    //   // const to = FileSystem.documentDirectory + fileName;
 
-      // await FileSystem.copyAsync({
-      //   from: uri, // uri to the image file
-      //   to,
-      // })
-      //   .then((response) => console.log({ response }))
-      //   .catch((error) => console.log({ error }));
+    //   // await FileSystem.copyAsync({
+    //   //   from: uri, // uri to the image file
+    //   //   to,
+    //   // })
+    //   //   .then((response) => console.log({ response }))
+    //   //   .catch((error) => console.log({ error }));
 
-      await FileSystem.writeAsStringAsync(path, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      })
-        .then((response) => {
-          console.log("save correct :" + fileName);
-          Sharing.shareAsync(path);
-        })
-        .catch((error) => console.log({ error }));
+    // await FileSystem.writeAsStringAsync(savedFilePath, wbout, {
+    //   encoding: FileSystem.EncodingType.Base64,
+    // })
+    //   .then((response) => {
+    //     console.log("save correct :" + fileName);
+    //     Sharing.shareAsync(savedFilePath);
+    //   })
+    //   .catch((error) => console.log({ error }));
 
-      try {
-        // const fileInfo = await FileSystem.getInfoAsync(path);
-        // if (fileInfo.exists) {
-        //   console.log("File exists.");
-        // } else {
-        //   console.log("File does not exist.");
-        // }
+    //   try {
+    //     // const fileInfo = await FileSystem.getInfoAsync(path);
+    //     // if (fileInfo.exists) {
+    //     //   console.log("File exists.");
+    //     // } else {
+    //     //   console.log("File does not exist.");
+    //     // }
 
-        FileSystem.readAsStringAsync(path, { encoding: "base64" }).then(
-          (data) => {
-            const workbook = XLSX.read(data, { type: "base64" });
-            const sheetName = workbook.SheetNames[0]; // Assuming only one sheet
-            const worksheet = workbook.Sheets[sheetName];
-            const parsedData: ExcelItem[] = XLSX.utils.sheet_to_json(worksheet);
-            console.log({ parsedData });
+    //     FileSystem.readAsStringAsync(path, { encoding: "base64" }).then(
+    //       (data) => {
+    //         const workbook = XLSX.read(data, { type: "base64" });
+    //         const sheetName = workbook.SheetNames[0]; // Assuming only one sheet
+    //         const worksheet = workbook.Sheets[sheetName];
+    //         const parsedData: ExcelItem[] = XLSX.utils.sheet_to_json(worksheet);
+    //         console.log({ parsedData });
 
-            setDataList2(parsedData);
-          }
-        );
-      } catch (error) {
-        console.error("Error occurred while checking file existence:", error);
-      }
+    //         setDataList2(parsedData);
+    //       }
+    //     );
+    //   } catch (error) {
+    //     console.error("Error occurred while checking file existence:", error);
+    //   }
 
-      // // Read the file
-      // const fileContents = await FileSystem.readAsStringAsync(path);
+    //   // // Read the file
+    //   // const fileContents = await FileSystem.readAsStringAsync(path);
 
-      // // Decode the Base64 data
-      // const decodedData = Buffer.from(fileContents, "base64");
+    //   // // Decode the Base64 data
+    //   // const decodedData = Buffer.from(fileContents, "base64");
 
-      // // Convert decoded data to string or whatever format it was before saving
-      // const originalData = decodedData.toString();
+    //   // // Convert decoded data to string or whatever format it was before saving
+    //   // const originalData = decodedData.toString();
 
-      // console.log("originalData", originalData);
+    //   // console.log("originalData", originalData);
 
-      // console.log(`save successful   ${fileName} ${path}.`);
-    } catch (error) {
-      console.error("Error on save:", { error });
-    }
+    //   // console.log(`save successful   ${fileName} ${path}.`);
+    // } catch (error) {
+    //   console.error("Error on save:", { error });
+    // }
 
     // console.log("ffff", FileSystem.documentDirectory);
 
@@ -560,61 +422,171 @@ export default function TabOneScreen() {
     // }
   };
 
-  return (
-    <View style={styles.container}>
-      {dataList2.length === 0 && (
-        <View
-          style={[
-            styles.rowCenter,
-            {
-              justifyContent: "space-between",
-              borderWidth: 1,
-              borderBlockColor: "gray",
-              paddingHorizontal: 5,
-            },
-          ]}
-        >
-          <TextInput
-            value={textInputValue}
-            onChangeText={setTextInputValue}
-            placeholder="Enter new item"
-            style={{ width: "80%" }}
-          />
-          <Button
-            title={updatedIndex !== null ? "Edit" : "Add"}
-            onPress={handlePressButton}
-          />
-        </View>
-      )}
+  const exportToPrint = async () => {
+    try {
+      const htmlContent = `<html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>print list</title>
+      <style>
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        th, td {
+          padding: 8px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+        th {
+          background-color: #f2f2f2;
+        }
+      </style>
+      </head>
+      <body>
+      
+      <h2>Sample Table</h2>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>name</th>
+            <th>qrcode</th>
+          </tr>
+        </thead>
+        <tbody>
+        ${finalDataListBase64
+          .map(
+            (item, index) => `
+          <tr>
+          <td>${index + 1}- ${item.name.substring(0, 20)}</td>
+          <td><img src='${item.qrcodeBase64}' /></td>
+        </tr>`
+          )
+          .join("")}
+        </tbody>
+      </table>
+      
+      </body>
+      </html>
+      `;
+      // let htmlContent2 = `
+      //   <html>
+      //     <head>
+      //       <style>
+      //         body {
+      //           font-family: 'Helvetica';
+      //           font-size: 12px;
+      //           display: flex;
+      //           flex-wrap: wrap;
+      //           justify-content: center;
+      //           align-items: center;
+      //           width: 1200px;
+      //         }
+      //         h1 {
+      //           font-size: 5em;
+      //         }
+      //         .footers {
+      //           margin-top: 50px;
+      //         }
+      //         img {
+      //           width: 200px;
+      //           height: 200px;
+      //           border: 3px solid black;
+      //           border-radius: 15px;
+      //           padding: 20px;
+      //         }
+      //       </style>
+      //     </head>
+      //     <body>
+      //       <table>`;
 
-      {dataList.length === 0 ? (
-        <View>
-          <Button title="اضافه کردن لیست" onPress={browseFile} />
-          <HelperAdd />
-        </View>
-      ) : dataList2.length === 0 ? (
+      // finalDataListBase64.forEach((item: IFinalDataListBase64) => {
+      //   htmlContent += `
+      //         <tr>
+      //           <th><h6>List QR Code</h6></th>
+      //         </tr>
+      //         <th>
+      //           ${item.name}
+      //         </th>
+      //         <tr>
+      //           <th><p class='footers'><img src='${item.qrcodeBase64}' /></p></th>
+      //         </tr>`;
+      // });
+
+      // htmlContent += `
+      //       </table>
+      //     </body>
+      //   </html>`;
+
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error("Error while printing:", error);
+    }
+  };
+
+  const handleEndReached = () => {
+    setDisplayExportPrint(true);
+  };
+
+  return (
+    <View
+      style={{
+        width: "100%",
+        padding: 10,
+        flex: 1,
+        backgroundColor: "white",
+        justifyContent: "flex-start",
+        alignItems: "center",
+      }}
+    >
+      {dataList2.length === 0 ? (
         <View
           style={{
             flex: 1,
+            width: "100%",
           }}
         >
-          <View style={[styles.rowCenter, { justifyContent: "space-between" }]}>
-            <Button
-              title="لیست جدید "
-              onPress={() =>
-                alertConfirm(() => {
-                  setDataList([]);
-                })
-              }
+          <View>
+            <CustomSwitch
+              value={isBrowseFile}
+              onValueChange={toggleSwitch}
+              label="browse file"
             />
-            <Text> تعداد: {dataList.length}</Text>
+
+            {!isBrowseFile ? (
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "column",
+                  justifyContent: "space-between", // To create equal space between the items
+                  alignItems: "center",
+                  height: 100,
+                }}
+              >
+                <CustomTextInput
+                  value={textInputValue}
+                  onChangeText={setTextInputValue}
+                  placeholder="Enter new item"
+                />
+                <CustomButton
+                  title={updatedIndex !== null ? "Edit" : "Add"}
+                  onPress={handlePressButton}
+                />
+              </View>
+            ) : (
+              <BrowseFile onPress={browseFile} />
+            )}
           </View>
-          <TextInput
+          <CustomTextInput
             style={{
-              height: 40,
-              borderColor: "gray",
-              borderWidth: 1,
-              paddingHorizontal: 10,
+              // height: 40,
+              // borderColor: "gray",
+              // borderWidth: 1,
+              // paddingHorizontal: 10,
+              marginBottom: 10,
             }}
             placeholder="Search..."
             value={searchQuery2}
@@ -626,30 +598,37 @@ export default function TabOneScreen() {
             keyExtractor={(item, index) => index.toString()}
           />
 
-          <Button
-            title="تایید نهایی و ساخت بار کد"
-            onPress={() => alertConfirm(getRefQrcodee)}
-          />
-        </View>
-      ) : (
-        <View style={{ flex: 1, padding: 5 }}>
-          <View style={[styles.rowCenter, { justifyContent: "space-between" }]}>
-            <Button
-              title="remove list"
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <CustomButton
+              title="لیست جدید "
               onPress={() =>
                 alertConfirm(() => {
-                  setDataList2([]);
+                  setDataList([]);
                 })
               }
             />
+            <CustomButton
+              title="تایید نهایی و ساخت بار کد"
+              onPress={() => alertConfirm(saveFinalList)}
+            />
             <Text> تعداد: {dataList.length}</Text>
           </View>
-          <TextInput
+        </View>
+      ) : (
+        <View style={{ flex: 1, padding: 5 }}>
+          <CustomTextInput
             style={{
-              height: 40,
-              borderColor: "gray",
-              borderWidth: 1,
-              paddingHorizontal: 10,
+              // height: 40,
+              // borderColor: "gray",
+              // borderWidth: 1,
+              // paddingHorizontal: 10,
+              marginBottom: 10,
             }}
             placeholder="Search..."
             value={searchQuery}
@@ -659,23 +638,126 @@ export default function TabOneScreen() {
             data={filteredData2}
             renderItem={renderQrItem}
             keyExtractor={(item, index) => index.toString()}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.1}
           />
 
-          {/* <Button
-            title="save file"
-            // onPress={() => alertConfirm(exportToXLSX)}
-          /> */}
+          {displayExportPrint && (
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <CustomButton
+                title="remove list"
+                onPress={() =>
+                  alertConfirm(() => {
+                    setDataList2([]);
+                  })
+                }
+              />
+              <CustomButton
+                title="save file for Print"
+                onPress={() => alertConfirm(exportToPrint)}
+              />
+              <Text> تعداد: {dataList2.length}</Text>
+            </View>
+          )}
         </View>
       )}
     </View>
   );
 }
 
+const BrowseFile = ({ onPress }: any) => {
+  const [isShowHelp, setIsShowHelp] = useState(false);
+  return (
+    <View style={{ width: "100%", paddingHorizontal: 2 }}>
+      <CustomButton title="اضافه کردن لیست" onPress={onPress} />
+
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <TouchableOpacity onPress={() => setIsShowHelp(!isShowHelp)}>
+          <FontAwesome
+            name="info"
+            size={25}
+            color="gray"
+            style={{ marginHorizontal: 2 }}
+          />
+        </TouchableOpacity>
+        <CustomText
+          style={{
+            marginVertical: 10,
+            direction: "rtl",
+            textAlign: "right",
+            writingDirection: "rtl",
+          }}
+        >
+          توجه داشته باشید فرمت فایل xlsx و طبق مثال زیر اطلاعات صحیح وارد شود.
+        </CustomText>
+      </View>
+      {isShowHelp && (
+        <View>
+          <View style={helperStyles.row}>
+            <Text style={helperStyles.header}>name</Text>
+            <Text style={helperStyles.header}></Text>
+            <FontAwesome
+              name="check-circle"
+              size={25}
+              color="green"
+              style={{ marginHorizontal: 2 }}
+            />
+          </View>
+
+          <View style={helperStyles.row}>
+            <Text style={helperStyles.cell}>احمد صفری</Text>
+            <Text style={helperStyles.cell}></Text>
+            <Text style={helperStyles.cell}></Text>
+          </View>
+          <View style={{ width: "100%", marginVertical: 20 }} />
+
+          <View style={helperStyles.row}>
+            <Text style={helperStyles.header}>name</Text>
+            <Text style={helperStyles.header}>family</Text>
+            <FontAwesome
+              name="close"
+              size={25}
+              color="red"
+              style={{ marginHorizontal: 2 }}
+            />
+          </View>
+          <View style={helperStyles.row}>
+            <Text style={helperStyles.cell}>احمد</Text>
+            <Text style={helperStyles.cell}>صفری</Text>
+            <Text style={helperStyles.cell}></Text>
+          </View>
+          <View style={helperStyles.row}>
+            <Text style={helperStyles.cell}>احمد</Text>
+            <Text style={helperStyles.cell}>صفری</Text>
+            <Text style={helperStyles.cell}>9376688343</Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: "column",
+    width: "100%",
+    paddingHorizontal: 10,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "white",
   },
   title: {
     fontSize: 20,
@@ -688,9 +770,8 @@ const styles = StyleSheet.create({
   },
   rowCenter: {
     width: "90%",
-    flexDirection: "row",
     alignItems: "center",
-    // justifyContent: "center",
+    justifyContent: "center",
   },
   table: {
     width: "30%",
@@ -710,63 +791,31 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     // paddingVertical: 5,
   },
+  input: {
+    width: "50%",
+  },
 });
 
-const HelperAdd = () => {
-  return (
-    <View style={{ paddingHorizontal: 2 }}>
-      <Text
-        style={{
-          marginVertical: 10,
-          // width: "90%",
-          direction: "rtl",
-          textAlign: "right",
-          writingDirection: "rtl",
-        }}
-      >
-        توجه داشته باشید فرمت فایل xlsx و طبق مثال زیر اطلاعات صحیح وارد شود.
-      </Text>
-
-      <View style={styles.rowCenter}>
-        <View style={{ width: 25 }} />
-        <View style={styles.rowCenter}>
-          <Text style={styles.table}>name</Text>
-          <Text style={styles.table}> </Text>
-        </View>
-      </View>
-      <View style={styles.rowCenter}>
-        <FontAwesome
-          name="check-circle"
-          size={25}
-          color="green"
-          style={{ marginHorizontal: 2 }}
-        />
-        <View style={styles.rowCenter}>
-          <Text style={styles.table}>احمد صفری</Text>
-          <Text style={styles.table}> </Text>
-        </View>
-      </View>
-      <View style={[styles.rowCenter, { marginTop: 20 }]}>
-        <View style={{ width: 25 }} />
-        <View style={styles.rowCenter}>
-          <Text style={styles.table}>name</Text>
-          <Text style={styles.table}>family</Text>
-          <Text style={styles.table}>phone</Text>
-        </View>
-      </View>
-      <View style={styles.rowCenter}>
-        <FontAwesome
-          name="close"
-          size={25}
-          color="red"
-          style={{ marginHorizontal: 2 }}
-        />
-        <View style={styles.rowCenter}>
-          <Text style={styles.table}>احمد</Text>
-          <Text style={styles.table}>صفری</Text>
-          <Text style={styles.table}>09376688343</Text>
-        </View>
-      </View>
-    </View>
-  );
-};
+const helperStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#fff",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    paddingVertical: 5,
+  },
+  header: {
+    fontWeight: "bold",
+    fontSize: 16,
+    flex: 1,
+  },
+  cell: {
+    flex: 1,
+    fontSize: 16,
+  },
+});
