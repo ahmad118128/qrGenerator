@@ -30,29 +30,31 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "لیست مدعوین",
-          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? "light"].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          title: "حضور غیاب",
+          headerTitleAlign: "center",
+          tabBarIcon: ({ color }) => <TabBarIcon name="search" color={color} />,
         }}
       />
       <Tabs.Screen
         name="two"
         options={{
-          title: "اسکن",
-          tabBarIcon: ({ color }) => <TabBarIcon name="search" color={color} />,
+          title: "ایجاد لیست",
+          headerTitleAlign: "center",
+          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
+          // headerRight: () => (
+          //   <Link href="/modal" asChild>
+          //     <Pressable>
+          //       {({ pressed }) => (
+          //         <FontAwesome
+          //           name="info-circle"
+          //           size={25}
+          //           color={Colors[colorScheme ?? "light"].text}
+          //           style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+          //         />
+          //       )}
+          //     </Pressable>
+          //   </Link>
+          // ),
         }}
       />
     </Tabs>

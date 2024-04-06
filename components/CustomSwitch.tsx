@@ -18,6 +18,7 @@ export const CustomSwitch: React.FC<CustomSwitchProps> = ({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+        paddingHorizontal: 10,
       }}
     >
       <Switch style={styles.switch} {...rest} />
