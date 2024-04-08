@@ -32,6 +32,9 @@ export default function TabLayout() {
         options={{
           title: "حضور غیاب",
           headerTitleAlign: "center",
+          headerTitleStyle: {
+            fontFamily: "iranSans",
+          },
           tabBarIcon: ({ color }) => <TabBarIcon name="search" color={color} />,
         }}
       />
@@ -40,6 +43,9 @@ export default function TabLayout() {
         options={{
           title: "ایجاد لیست",
           headerTitleAlign: "center",
+          headerTitleStyle: {
+            fontFamily: "iranSans",
+          },
           tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
           // headerRight: () => (
           //   <Link href="/modal" asChild>

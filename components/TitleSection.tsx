@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, ViewStyle, TextStyle, StyleSheet } from "react-native";
+import { View, ViewStyle, TextStyle, StyleSheet } from "react-native";
+import { CustomText } from "./CustomText";
 
 interface TitleSectionProps {
   titles: string[];
@@ -15,9 +16,9 @@ export const TitleSection: React.FC<TitleSectionProps> = ({
   return (
     <View style={[styles.container, containerStyle]}>
       {titles.map((title, i) => (
-        <Text key={`${title}-${i}`} style={[styles.title, titleStyle]}>
+        <CustomText key={`${title}-${i}`} style={[styles.title, titleStyle]}>
           {title}
-        </Text>
+        </CustomText>
       ))}
     </View>
   );
@@ -30,13 +31,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     borderRadius: 5,
     marginVertical: 10,
-    // flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   title: {
     fontSize: 20,
-    fontWeight: "bold",
   },
 });

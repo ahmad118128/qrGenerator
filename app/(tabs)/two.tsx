@@ -209,7 +209,7 @@ const BrowseFile = ({ onPress }: any) => {
             شود.
           </CustomText>
           <View style={helperStyles.row}>
-            <Text style={helperStyles.header}>name</Text>
+            <CustomText style={helperStyles.header}>name</CustomText>
             <Text style={helperStyles.header}></Text>
             <FontAwesome
               name="check-circle"
@@ -220,15 +220,15 @@ const BrowseFile = ({ onPress }: any) => {
           </View>
 
           <View style={helperStyles.row}>
-            <Text style={helperStyles.cell}>احمد صفری</Text>
+            <CustomText style={helperStyles.cell}>احمد صفری</CustomText>
             <Text style={helperStyles.cell}></Text>
             <Text style={helperStyles.cell}></Text>
           </View>
           <View style={{ width: "100%", marginVertical: 20 }} />
 
           <View style={helperStyles.row}>
-            <Text style={helperStyles.header}>name</Text>
-            <Text style={helperStyles.header}>family</Text>
+            <CustomText style={helperStyles.header}>name</CustomText>
+            <CustomText style={helperStyles.header}>family</CustomText>
             <FontAwesome
               name="close"
               size={25}
@@ -237,14 +237,14 @@ const BrowseFile = ({ onPress }: any) => {
             />
           </View>
           <View style={helperStyles.row}>
-            <Text style={helperStyles.cell}>احمد</Text>
-            <Text style={helperStyles.cell}>صفری</Text>
+            <CustomText style={helperStyles.cell}>احمد</CustomText>
+            <CustomText style={helperStyles.cell}>صفری</CustomText>
             <Text style={helperStyles.cell}></Text>
           </View>
           <View style={helperStyles.row}>
-            <Text style={helperStyles.cell}>احمد</Text>
-            <Text style={helperStyles.cell}>صفری</Text>
-            <Text style={helperStyles.cell}>9376688343</Text>
+            <CustomText style={helperStyles.cell}>احمد</CustomText>
+            <CustomText style={helperStyles.cell}>صفری</CustomText>
+            <CustomText style={helperStyles.cell}>9376688343</CustomText>
           </View>
         </View>
       </Collapsible>
@@ -581,7 +581,6 @@ const DataListQRcode = ({
   textInputValue,
   setTextInputValue,
 }: any) => {
-  const [isShowHelp, setIsShowHelp] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [displayExportPrint, setDisplayExportPrint] = useState(false);
   const finalDataListBase64: IFinalDataListBase64[] = [];
@@ -671,11 +670,11 @@ const DataListQRcode = ({
           borderBottomWidth: 1,
         }}
       >
-        <Text>
+        <CustomText>
           {index + 1}-{item.name.substring(0, 20)}
-        </Text>
-        <Text>{item.data}</Text>
-        <Text>{item.status}</Text>
+        </CustomText>
+        <CustomText>{item.data}</CustomText>
+        <CustomText>{item.status}</CustomText>
         <QRCode
           value={item.id}
           size={25}
@@ -761,7 +760,6 @@ const helperStyles = StyleSheet.create({
     paddingVertical: 5,
   },
   header: {
-    fontWeight: "bold",
     fontSize: 16,
     flex: 1,
   },

@@ -23,6 +23,7 @@ import { CustomTextInput } from "@/components/CustomTextInput";
 import { FontAwesome } from "@expo/vector-icons";
 import { CustomText } from "@/components/CustomText";
 import { CustomSwitch } from "@/components/CustomSwitch";
+import { MonoText } from "@/components/StyledText";
 const { width } = Dimensions.get("window");
 const qrSize = width * 0.7;
 
@@ -106,11 +107,11 @@ const TabOneScreen: React.FC = () => {
   };
 
   if (hasPermission === null) {
-    return <Text>در حال ارسال درخواست برای دسترسی دوربین</Text>;
+    return <CustomText>در حال ارسال درخواست برای دسترسی دوربین</CustomText>;
   }
 
   if (hasPermission === false) {
-    return <Text>دسترسی به دوربین داده نشده است</Text>;
+    return <CustomText>دسترسی به دوربین داده نشده است</CustomText>;
   }
 
   const handleActiveEdit = (index: number) => {
@@ -148,10 +149,10 @@ const TabOneScreen: React.FC = () => {
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text>{index + 1}- </Text>
-          <Text> {item.name.substring(0, 20)}</Text>
+          <CustomText>{index + 1}- </CustomText>
+          <CustomText> {item.name.substring(0, 20)}</CustomText>
         </View>
-        <Text>{item.date}</Text>
+        <CustomText>{item.date}</CustomText>
         <TouchableOpacity
           onPress={() =>
             alertConfirm(
@@ -188,7 +189,6 @@ const TabOneScreen: React.FC = () => {
           label="بارکد خوان"
         />
       )}
-
       {isScan && (
         <View style={{ width: "100%" }}>
           <CustomButton
@@ -211,7 +211,7 @@ const TabOneScreen: React.FC = () => {
       )}
       <View>
         <CustomButton title="بارگذاری لیست" onPress={loadList} />
-        <CustomText>
+        <CustomText size={10}>
           توجه داشته باشید فایلی که در بخش ایجاد لیست ساخته شده در این بخش
           بارگذاری می شود
         </CustomText>
@@ -247,7 +247,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: "bold",
   },
   separator: {
     marginVertical: 30,

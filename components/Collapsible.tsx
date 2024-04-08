@@ -8,6 +8,7 @@ import {
   TextStyle,
   StyleSheet,
 } from "react-native";
+import { CustomText } from "./CustomText";
 
 interface CollapsibleProps extends PropsWithChildren {
   title: string;
@@ -26,14 +27,14 @@ export const Collapsible: React.FC<CollapsibleProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const toggleCollapse = () => {
+    const fdf = () => {};
     setIsCollapsed(!isCollapsed);
   };
 
   return (
     <View style={[styles.container, containerStyle]}>
       <View style={styles.header}>
-        <Text style={[styles.title, titleStyle]}>{title}</Text>
-        {/* Arrow icon */}
+        <CustomText style={[titleStyle]}>{title}</CustomText>
         <TouchableOpacity onPress={toggleCollapse}>
           <FontAwesome
             name={isCollapsed ? "chevron-down" : "chevron-up"}
@@ -63,10 +64,6 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     borderBottomWidth: 1,
     borderBottomColor: "#000",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
   },
   contentContainer: {
     padding: 10,

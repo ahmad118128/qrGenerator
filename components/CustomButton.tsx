@@ -7,6 +7,7 @@ import {
   StyleProp,
   ViewStyle,
 } from "react-native";
+import { CustomText } from "./CustomText";
 
 interface CustomButtonProps extends TouchableOpacityProps {
   title: string;
@@ -39,14 +40,14 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
       ]}
       {...rest}
     >
-      <Text style={styles.text}>{title}</Text>
+      <CustomText style={styles.text}>{title}</CustomText>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 12,
+    paddingVertical: 6,
     paddingHorizontal: 24,
     borderRadius: 6,
     justifyContent: "center",
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontFamily: "iranSans",
   },
 });
