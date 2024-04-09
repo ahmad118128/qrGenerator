@@ -35,7 +35,7 @@ export default function TabLayout() {
           headerTitleStyle: {
             fontFamily: "iranSans",
           },
-          tabBarIcon: ({ color }) => <TabBarIcon name="search" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -46,7 +46,10 @@ export default function TabLayout() {
           headerTitleStyle: {
             fontFamily: "iranSans",
           },
-          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
+          // tabBarActiveTintColor: "green",
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="list-alt" color={color} />
+          ),
           // headerRight: () => (
           //   <Link href="/modal" asChild>
           //     <Pressable>

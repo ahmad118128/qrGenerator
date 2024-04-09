@@ -9,11 +9,12 @@ interface CustomTextProps extends TextProps {
 export const CustomText: React.FC<CustomTextProps> = ({
   children,
   size,
+  style,
   ...rest
 }) => {
   return (
     <Text
-      style={[styles.text, { fontFamily: "iranSans", fontSize: size }]}
+      style={[styles.text, { fontFamily: "iranSans", fontSize: size }, style]}
       {...rest}
     >
       {children}

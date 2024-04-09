@@ -38,7 +38,7 @@ export const Collapsible: React.FC<CollapsibleProps> = ({
         <TouchableOpacity onPress={toggleCollapse}>
           <FontAwesome
             name={isCollapsed ? "chevron-down" : "chevron-up"}
-            size={25}
+            size={15}
             color="#000"
             style={{ marginHorizontal: 2 }}
           />

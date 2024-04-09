@@ -1,5 +1,3 @@
-import EditScreenInfo from "@/components/EditScreenInfo";
-
 import React, { useState, useEffect } from "react";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import {
@@ -23,7 +21,6 @@ import { CustomTextInput } from "@/components/CustomTextInput";
 import { FontAwesome } from "@expo/vector-icons";
 import { CustomText } from "@/components/CustomText";
 import { CustomSwitch } from "@/components/CustomSwitch";
-import { MonoText } from "@/components/StyledText";
 const { width } = Dimensions.get("window");
 const qrSize = width * 0.7;
 
@@ -164,7 +161,7 @@ const TabOneScreen: React.FC = () => {
           }
         >
           <FontAwesome
-            name={item.status ? `check` : `minus`}
+            name={item.status ? `user-times` : `user-plus`}
             size={25}
             color={item.status ? `green` : `gray`}
             style={{ marginHorizontal: 2 }}
@@ -186,11 +183,11 @@ const TabOneScreen: React.FC = () => {
         <CustomSwitch
           value={isScan}
           onValueChange={toggleSwitch}
-          label="بارکد خوان"
+          label="ثبت توسط بارکد خوان"
         />
       )}
       {isScan && (
-        <View style={{ width: "100%" }}>
+        <View style={{ width: "90%" }}>
           <CustomButton
             title={isStartScan ? "پایان اسکن" : "شروع اسکن"}
             onPress={() => {
@@ -211,7 +208,7 @@ const TabOneScreen: React.FC = () => {
       )}
       <View>
         <CustomButton title="بارگذاری لیست" onPress={loadList} />
-        <CustomText size={10}>
+        <CustomText size={14} style={{ color: "gray" }}>
           توجه داشته باشید فایلی که در بخش ایجاد لیست ساخته شده در این بخش
           بارگذاری می شود
         </CustomText>

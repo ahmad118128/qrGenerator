@@ -3,8 +3,6 @@ import {
   FlatList,
   Platform,
   StyleSheet,
-  Button,
-  TextInput,
   TouchableOpacity,
 } from "react-native";
 import XLSX from "xlsx";
@@ -135,9 +133,9 @@ export default function TabTwoScreen() {
       }}
     >
       {isExistOldFile && (
-        <CustomText>
-          شما قبلا لیست نهایی را ایجاد کرده اید. در صورت ادامه و ثبت مجدد کد های
-          قبلی غیر قابل استفاده می شود.
+        <CustomText style={{ color: "#a62b2f" }}>
+          شما قبلا لیست نهایی را ایجاد کرده اید. در صورت ادامه و ثبت مجدد qr کد
+          های قبلی غیر قابل استفاده می شود.
         </CustomText>
       )}
       {dataList2.length === 0 ? (
@@ -153,13 +151,6 @@ export default function TabTwoScreen() {
               onValueChange={toggleSwitch}
               label="بارگزاری فایل از گوشی"
             />
-            {/* <CustomButton
-              fullWidth
-              title="بارگزاری لیست قبلی"
-              onPress={loadList}
-              type="gray"
-            /> */}
-
             {!isBrowseFile ? (
               <CustomAddToList
                 onPress={handlePressButton}
@@ -190,7 +181,6 @@ export default function TabTwoScreen() {
 }
 
 const BrowseFile = ({ onPress }: any) => {
-  const [isShowHelp, setIsShowHelp] = useState(false);
   return (
     <View style={{ width: "100%", paddingHorizontal: 2 }}>
       <CustomButton title="اضافه کردن لیست" onPress={onPress} />
@@ -205,8 +195,8 @@ const BrowseFile = ({ onPress }: any) => {
               writingDirection: "rtl",
             }}
           >
-            توجه داشته باشید فرمت فایل xlsx و طبق مثال زیر اطلاعات صحیح وارد
-            شود.
+            توجه داشته باشید فرمت فایل xlsx باشد و طبق مثال زیر اطلاعات با فرمت
+            صحیح وارد شود.
           </CustomText>
           <View style={helperStyles.row}>
             <CustomText style={helperStyles.header}>name</CustomText>
@@ -352,11 +342,9 @@ const DataList = ({
   };
 
   const handleDelete = (index: number, item: ExcelItem) => {
-    // const newData = [...dataList];
-    // [...dataList].splice(index, 1);
-    // setDataList(newData);
-    alertConfirm(() =>
-      setDataList(dataList.filter((data: ExcelItem) => data !== item))
+    alertConfirm(
+      () => setDataList(dataList.filter((data: ExcelItem) => data !== item)),
+      "حذف"
     );
   };
 
@@ -548,7 +536,7 @@ const DataList = ({
           onPress={() =>
             alertConfirm(() => {
               setDataList([]);
-            })
+            }, "حذف")
           }
           type="red"
         />
@@ -733,7 +721,7 @@ const DataListQRcode = ({
             onPress={() =>
               alertConfirm(() => {
                 setDataList2([]);
-              })
+              }, "حذف")
             }
           />
           <CustomButton
